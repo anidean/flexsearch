@@ -133,10 +133,7 @@ function create(factory, is_node_js, worker_path){
 
     try{
 
-        worker = is_node_js ?
-
-            eval('new (require("worker_threads")["Worker"])("../dist/node/node.js")')
-        :(
+        worker = (
             factory ?
 
                 new Worker(URL.createObjectURL(

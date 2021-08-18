@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1, maximum-scale=1.0, user-scalable=no">
     <title>Demo: Auto-Complete</title>
-    <script src="../dist/flexsearch.compact.js"></script>
+    <script src="../dist/flexsearch.bundle.js"></script>
     <style>
         body{
             padding:0;
@@ -74,21 +74,62 @@
 <div id="suggestions"></div>
 <script type="module">
 
-    import data from "./data/movies.js";
+    // import data from "./data/movies.js";
+    import {text_data} from "./data/gulliver.js";
+    window.text_data = text_data;
 
     (function(){
 
-        const index = new FlexSearch.Index({
+        // const index = new FlexSearch.Index({
 
-            charset: "latin:advanced",
-            tokenize: "reverse",
-            cache: true
+        //     charset: "latin:advanced",
+        //     tokenize: "strict",
+        //     cache: true
+        // });
+        const index = new FlexSearch.Index({ context: {depth: 2}});
+        const dIndex = new FlexSearch.Document({
+            document: {
+                id: "id",
+                tag: "tag",
+                index: ["content"]
+            }
+        });
+        let start = window.performance.now();
+        for(var i = 0; i < text_data.length; i++){
+
+            index.add(i, text_data[i]);
+        }
+
+        dIndex.add({
+            id: 0,
+            tag: ["owner:dave", "owner:bob", "owner:kelly", "owner:becky"],
+            content: `content ${0} cool stuff`,
+        });
+        dIndex.add({
+            id: 1,
+            tag: ["owner:kelly", "owner:becky"],
+            content: `content ${1} cool stuff`,
+        });
+        dIndex.add({
+            id: 2,
+            tag: ["owner:dave", "owner:kelly", "owner:becky"],
+            content: `content ${2} cool stuff`,
+        });
+        dIndex.add({
+            id: 3,
+            tag: ["owner:dave", "owner:bob"],
+            content: `content ${3} cool oh`,
+        });
+        dIndex.add({
+            id: 4,
+            tag: ["owner:bob", "owner:kelly",],
+            content: `content ${4} cool stuff`,
         });
 
-        for(var i = 0; i < data.length; i++){
+        window.dIndex = dIndex;
+        window.iindex = index;
 
-            index.add(i, data[i]);
-        }
+        console.log(`indexing took ${(window.performance.now() - start) / 1000}`);
 
         var suggestions = document.getElementById("suggestions");
         var autocomplete = document.getElementById("autocomplete");
@@ -101,7 +142,8 @@
         function show_results(){
 
             var value = this.value;
-            var results = index.search(value, 25, { suggest: true });
+            var results = index.search(value, 10, { suggest: true });
+            console.log("results", results);
             var entry, childs = suggestions.childNodes;
             var i = 0, len = results.length;
 
@@ -115,7 +157,7 @@
                     suggestions.appendChild(entry);
                 }
 
-                entry.textContent = data[results[i]];
+                entry.textContent = text_data[results[i]];
             }
 
             while(childs.length > len){
@@ -123,7 +165,7 @@
                 suggestions.removeChild(childs[i])
             }
 
-            var first_result = data[results[0]];
+            var first_result = text_data[results[0]];
             var match = first_result && first_result.toLowerCase().indexOf(value.toLowerCase());
 
             if(first_result && (match !== -1)){
@@ -158,6 +200,7 @@
 
             return false;
         }
+        window.fsIndex = index;
     }());
 </script>
 </body>
